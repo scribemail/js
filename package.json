@@ -1,6 +1,6 @@
 {
   "name": "@scribe-sas/js",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Scribe event tracking SDK — track conversions and attribute them to email-signature clicks.",
   "license": "MIT",
   "author": "Scribe SAS",
@@ -36,8 +36,12 @@
     },
     "./tracking.js": "./dist/v1/tracking.js"
   },
-  "files": ["dist"],
-  "sideEffects": ["./dist/v1/tracking.js"],
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "./dist/v1/tracking.js"
+  ],
   "publishConfig": {
     "access": "public"
   },
