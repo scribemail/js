@@ -19,7 +19,7 @@ env:
 
 permissions:
   contents: write # create the GitHub Release
-  id-token: write # npm provenance (OIDC)
+  id-token: write # npm Trusted Publishing (OIDC) — short-lived, no long-lived token
 
 jobs:
   release:
@@ -60,11 +60,15 @@ jobs:
       - name: Build
         run: pnpm build
 
-      # 1) npm — public package with build provenance.
+      # 1) npm — Trusted Publishing via OIDC. No NPM_TOKEN: the runner exchanges a short-lived
+      #    id-token for publish rights, and provenance is attached automatically. Requires npm
+      #    >= 11.5.1, which is newer than the runner default, so upgrade it first.
+      #    One-time prerequisite: the package must already exist on npm and have a Trusted Publisher
+      #    configured for org "scribemail", repo "js", workflow "release.yml".
+      - name: Upgrade npm (OIDC support)
+        run: npm install -g npm@latest
       - name: Publish to npm
-        run: pnpm publish --no-git-checks --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish
 
       # 2) Cloudflare R2 — upload the IIFE + sourcemap to the major-versioned path the snippet URL
       #    uses (v1/tracking.js). Minor/patch releases overwrite within the same major; a breaking
