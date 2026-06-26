@@ -11,13 +11,11 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
-# --- Adjust these to your Cloudflare setup -------------------------------------------------------
-# R2_BUCKET : the R2 bucket name that backs cdn-1.scribe-mail.com
-# CDN_BASE  : the public custom-domain base the bucket is served from (no trailing slash)
+# R2_BUCKET is read from a repository variable (Settings → Secrets and variables → Actions →
+# Variables) so the bucket name isn't committed. CDN_BASE is the public snippet URL host.
 env:
-  R2_BUCKET: scribe-tracking-cdn
+  R2_BUCKET: ${{ vars.R2_BUCKET }}
   CDN_BASE: https://cdn-1.scribe-mail.com
-# -------------------------------------------------------------------------------------------------
 
 permissions:
   contents: write # create the GitHub Release
