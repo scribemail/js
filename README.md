@@ -1,4 +1,4 @@
-# @scribe-sas/js
+# @scribemail/js
 
 The Scribe **event tracking** SDK — record conversions (signups, purchases, demos booked…) from
 your website and tie them to the visitors who triggered them. Use it as an npm package or as a
@@ -10,18 +10,18 @@ events to that click — no extra setup needed.
 ## Install (npm / yarn)
 
 ```bash
-npm install @scribe-sas/js
-# or: yarn add @scribe-sas/js
+npm install @scribemail/js
+# or: yarn add @scribemail/js
 ```
 
 ```js
-import scribe from '@scribe-sas/js';
+import scribe from '@scribemail/js';
 
 scribe.init({ site: 'YOUR_EVENT_TRACKING_ID' }); // once, at app startup
 scribe.track('signup', { value: 99.0, currency: 'USD' });
 ```
 
-Named imports work too (`import { init, track, identify } from '@scribe-sas/js'`). Ships ESM + CJS +
+Named imports work too (`import { init, track, identify } from '@scribemail/js'`). Ships ESM + CJS +
 TypeScript types, and is SSR-safe — importing has no side effects, and nothing is sent until you
 call `init()`.
 

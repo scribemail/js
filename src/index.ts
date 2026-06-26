@@ -1,6 +1,6 @@
-// npm entry point for @scribe-sas/js — the programmatic API for bundler/app code:
+// npm entry point for @scribemail/js — the programmatic API for bundler/app code:
 //
-//   import scribe from '@scribe-sas/js';
+//   import scribe from '@scribemail/js';
 //   scribe.init({ site: 'YOUR_EVENT_TRACKING_ID' });
 //   scribe.track('signup', { value: 99, currency: 'USD' });
 //

@@ -68,7 +68,15 @@ jobs:
       - name: Upgrade npm (OIDC support)
         run: npm install -g npm@latest
       - name: Publish to npm
-        run: npm publish
+        # Idempotent: skip if this exact version is already on npm (e.g. the one-time bootstrap
+        # publish, or a re-run), so the rest of the release can still proceed.
+        run: |
+          NAME="$(node -p "require('./package.json').name")"
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "::notice::$NAME@$VERSION already published — skipping npm publish."
+          else
+            npm publish
+          fi
 
       # 2) Cloudflare R2 — upload the IIFE + sourcemap to the major-versioned path the snippet URL
       #    uses (v1/tracking.js). Minor/patch releases overwrite within the same major; a breaking

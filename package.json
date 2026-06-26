@@ -1,5 +1,5 @@
 {
-  "name": "@scribe-sas/js",
+  "name": "@scribemail/js",
   "version": "1.0.0",
   "description": "Scribe event tracking SDK — track conversions and attribute them to email-signature clicks.",
   "license": "MIT",
