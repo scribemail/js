@@ -1,6 +1,16 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildEvent, createTracker, getAnonymousId, uuid, type ScribeEvent } from "./core";
+import { readCookie } from "./cookies";
+
+// jsdom runs on http://localhost, so identity cookies are host-only (no Domain / Secure) — expire
+// each one to reset between examples.
+function clearCookies(): void {
+  for (const part of document.cookie.split(";")) {
+    const key = part.split("=")[0].trim();
+    if (key) document.cookie = `${key}=; Path=/; Max-Age=0`;
+  }
+}
 
 describe("buildEvent", () => {
   it("maps value/currency to top level and the rest to properties", () => {
@@ -46,24 +56,24 @@ describe("uuid", () => {
 });
 
 describe("getAnonymousId", () => {
-  afterEach(() => localStorage.clear());
+  afterEach(clearCookies);
 
   it("mints once and is sticky across calls", () => {
     const first = getAnonymousId();
     expect(first).toMatch(/^[0-9a-f-]{36}$/);
     expect(getAnonymousId()).toBe(first);
-    expect(localStorage.getItem("scribe_anonymous_id")).toBe(first);
+    expect(readCookie("scribe_mail_anonymous_id")).toBe(first);
   });
 
   it("returns undefined and writes nothing when consent is denied", () => {
     expect(getAnonymousId(true)).toBeUndefined();
-    expect(localStorage.getItem("scribe_anonymous_id")).toBeNull();
+    expect(readCookie("scribe_mail_anonymous_id")).toBeUndefined();
   });
 });
 
 describe("createTracker — sticky identity", () => {
   afterEach(() => {
-    localStorage.clear();
+    clearCookies();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
@@ -147,8 +157,8 @@ describe("createTracker — sticky identity", () => {
     const signup = events().find((e) => e.name === "signup");
     expect(signup?.anonymous_id).toBeUndefined();
     expect(signup?.user_id).toBeUndefined();
-    expect(localStorage.getItem("scribe_user_id")).toBeNull();
-    expect(localStorage.getItem("scribe_anonymous_id")).toBeNull();
+    expect(readCookie("scribe_mail_user_id")).toBeUndefined();
+    expect(readCookie("scribe_mail_anonymous_id")).toBeUndefined();
   });
 
   it("reset rotates the anonymous id and clears user_id/traits", () => {
@@ -163,8 +173,8 @@ describe("createTracker — sticky identity", () => {
     expect(after.user_id).toBeUndefined();
     expect(after.anonymous_id).toMatch(/^[0-9a-f-]{36}$/);
     expect(after.anonymous_id).not.toBe(before.anonymous_id);
-    expect(localStorage.getItem("scribe_user_id")).toBeNull();
-    expect(localStorage.getItem("scribe_traits")).toBeNull();
+    expect(readCookie("scribe_mail_user_id")).toBeUndefined();
+    expect(readCookie("scribe_mail_traits")).toBeUndefined();
   });
 
   it("seeds identity from storage so a returning visitor is identified without re-calling identify", () => {
@@ -179,5 +189,26 @@ describe("createTracker — sticky identity", () => {
     second.tracker.flush();
     const ev = second.events().find((e) => e.name === "returning")!;
     expect(ev.user_id).toBe("user-42");
+  });
+
+  it("scopes the identity cookies to an explicit cookieDomain", () => {
+    // Record raw Set-Cookie strings; the getter stays empty so the anonymous id is minted (written).
+    const writes: string[] = [];
+    Object.defineProperty(document, "cookie", {
+      configurable: true,
+      get: () => "",
+      set: (v: string) => void writes.push(String(v)),
+    });
+    try {
+      createTracker({ site: "ws-1", cookieDomain: "example.com" });
+    } finally {
+      // @ts-expect-error reveal the prototype accessor again
+      delete document.cookie;
+    }
+    const anonWrite = writes.find((w) => w.startsWith("scribe_mail_anonymous_id="));
+    expect(anonWrite).toBeDefined();
+    expect(anonWrite).toContain("Domain=example.com");
+    expect(anonWrite).toContain("Path=/");
+    expect(anonWrite).toContain("SameSite=Lax");
   });
 });

@@ -1,12 +1,19 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+function clearCookies(): void {
+  for (const part of document.cookie.split(";")) {
+    const key = part.split("=")[0].trim();
+    if (key) document.cookie = `${key}=; Path=/; Max-Age=0`;
+  }
+}
+
 // The <script> path: boot() reads data-* off the snippet, exposes window.scribe, and sends.
 describe("browser bundle — boot from a <script> tag", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
-    localStorage.clear();
+    clearCookies();
     document.head.innerHTML = "";
     // @ts-expect-error reset the global between examples
     delete window.scribe;

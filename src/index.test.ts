@@ -1,13 +1,20 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+function clearCookies(): void {
+  for (const part of document.cookie.split(";")) {
+    const key = part.split("=")[0].trim();
+    if (key) document.cookie = `${key}=; Path=/; Max-Age=0`;
+  }
+}
+
 // Each test re-imports a fresh module so the init() singleton state doesn't leak between examples.
 describe("npm module — init / track", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     vi.resetModules();
-    localStorage.clear();
+    clearCookies();
     // @ts-expect-error reset the global between examples
     delete window.scribe;
   });

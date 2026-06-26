@@ -18,10 +18,16 @@ export interface InitOptions {
   site: string;
   /** Override the ingest host (advanced/testing). */
   endpoint?: string;
-  /** Defaults to true. Set false to disable first-party storage of the click id. */
+  /** Defaults to true. Set false to disable first-party storage of the visitor identity. */
   consent?: boolean;
   /** Supply a click id explicitly; otherwise it's captured from the landing URL. */
   clickId?: string;
+  /**
+   * Cookie domain for the persisted identity. Defaults to your registrable/top domain so every
+   * subdomain shares one identity (e.g. app.example.com and www.example.com). Pass e.g.
+   * "example.com" to set it explicitly, or a single host to scope identity to that subdomain only.
+   */
+  cookieDomain?: string;
 }
 
 export interface Scribe {
@@ -40,6 +46,7 @@ export function init(options: InitOptions): Scribe {
     endpoint: options.endpoint,
     consentDenied: options.consent === false,
     clickId: options.clickId,
+    cookieDomain: options.cookieDomain,
   });
   if (typeof window !== "undefined") {
     (window as unknown as { scribe: Scribe }).scribe = scribe;

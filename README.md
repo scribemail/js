@@ -39,13 +39,15 @@ call `init()`.
 - `data-workspace` — your **Event Tracking ID**, a public (non-secret) site id from your Scribe
   dashboard.
 - `data-consent="denied"` — start with tracking storage disabled (see [Consent & privacy](#consent--privacy)).
+- `data-cookie-domain="example.com"` — set the identity cookie's domain explicitly (see
+  [Cross-subdomain identity](#cross-subdomain-identity)). Optional; defaults to your top domain.
 
 The snippet auto-initializes and exposes a global `scribe`.
 
 ## API
 
 ```js
-scribe.init({ site, consent? });   // npm only; the snippet auto-inits from data-* attributes
+scribe.init({ site, consent?, cookieDomain? }); // npm only; the snippet auto-inits from data-* attributes
 scribe.track(name, metadata?);     // record an event
 scribe.identify(userId?, traits?); // associate this visitor's events with one of your users
 scribe.reset();                    // clear the identity (call on logout)
@@ -64,7 +66,8 @@ rarely need `flush()`.
 ## Identifying visitors
 
 The SDK keeps a **sticky identity** so you set it once and forget it. On first load it creates a
-first-party anonymous id (stored in `localStorage`) and attaches it to **every** event. Call
+first-party anonymous id (stored in a cookie on your top domain — see
+[Cross-subdomain identity](#cross-subdomain-identity)) and attaches it to **every** event. Call
 `identify` once you know who the visitor is — typically right after login or signup:
 
 ```js
@@ -81,6 +84,36 @@ scribe.track('signup'); // automatically carries user_42 + the anonymous id
   `identify` again merges new traits over the existing ones.
 - **`reset()` on logout** (or on a shared device) clears the stored identity and starts a fresh,
   unlinked anonymous visitor.
+
+## Cross-subdomain identity
+
+Identity (anonymous id, user id, click id, and traits) is persisted in **first-party cookies**. By
+default the SDK detects your **registrable/top domain** and scopes the cookies there (e.g.
+`example.com`), so a visitor is the **same identity** across every subdomain — `www.example.com`,
+`app.example.com`, `shop.example.com`. No configuration needed.
+
+Override the domain when the default isn't what you want:
+
+```js
+// npm
+scribe.init({ site: 'YOUR_EVENT_TRACKING_ID', cookieDomain: 'example.com' });
+```
+
+```html
+<!-- script tag -->
+<script src="https://cdn-1.scribe-mail.com/v1/tracking.js"
+        data-workspace="YOUR_EVENT_TRACKING_ID"
+        data-cookie-domain="example.com" async></script>
+```
+
+- Pass your apex domain (e.g. `example.com`) to share identity across all its subdomains — this is
+  also the auto-detected default.
+- Pass a single host (e.g. `app.example.com`) to scope identity to that subdomain only.
+- On `localhost` or a bare IP there's no shareable parent domain, so a host-only cookie is used
+  (handy for local development).
+
+Cookies are set with `Path=/; SameSite=Lax` (and `Secure` on HTTPS). Note that Safari (ITP) caps
+JavaScript-set cookies to 7 days.
 
 ## Consent & privacy
 

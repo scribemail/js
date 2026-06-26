@@ -27,6 +27,7 @@ export function boot(): void {
     site,
     endpoint: script?.getAttribute("data-endpoint") || undefined,
     consentDenied: script?.getAttribute("data-consent") === "denied",
+    cookieDomain: script?.getAttribute("data-cookie-domain") || undefined,
   });
 
   const api: ScribeGlobal = {
