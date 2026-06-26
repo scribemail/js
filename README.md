@@ -1,11 +1,11 @@
 # @scribemail/js
 
-The Scribe **event tracking** SDK — record conversions (signups, purchases, demos booked…) from
-your website and tie them to the visitors who triggered them. Use it as an npm package or as a
-single `<script>` tag; both share the same `scribe.track(...)` API.
+The [Scribe](https://scribe-mail.com) **event tracking** SDK — record conversions (signups,
+purchases, demos booked…) from your website and tie them to the visitors who triggered them. Use it
+as an npm package or as a single `<script>` tag; both share the same `scribe.track(...)` API.
 
-When a visitor arrives from a Scribe email-signature link, the SDK automatically attributes their
-events to that click — no extra setup needed.
+When a visitor arrives from a [Scribe email-signature](https://scribe-mail.com) link, the SDK
+automatically attributes their events to that click — no extra setup needed.
 
 ## Install (npm / yarn)
 
@@ -36,8 +36,8 @@ call `init()`.
 </script>
 ```
 
-- `data-workspace` — your **Event Tracking ID**, a public (non-secret) site id from your Scribe
-  dashboard.
+- `data-workspace` — your **Event Tracking ID**, a public (non-secret) site id from your
+  [Scribe dashboard](https://scribe-mail.com).
 - `data-consent="denied"` — start with tracking storage disabled (see [Consent & privacy](#consent--privacy)).
 - `data-cookie-domain="example.com"` — set the identity cookie's domain explicitly (see
   [Cross-subdomain identity](#cross-subdomain-identity)). Optional; defaults to your top domain.
@@ -129,6 +129,24 @@ If your site uses a Content Security Policy, allowlist the Scribe domains:
 script-src  https://cdn-1.scribe-mail.com;   # only needed for the <script> snippet
 connect-src https://t.scribe-mail.com;        # where events are sent
 ```
+
+## About Scribe
+
+This SDK is built and maintained by **[Scribe](https://scribe-mail.com)** — email signatures,
+finally **simple and measurable**. Deploy consistent, branded signatures across your whole company
+in under a day (no per-employee install, zero IT tickets), then turn every email your team sends
+into a measurable channel — signature banners see a **12% average click-through rate**, ~6× typical
+email marketing.
+
+This `track()` SDK closes the loop: it ties those signature clicks all the way through to
+**[conversion tracking from click to revenue](https://scribe-mail.com)** on your own site.
+
+- 🌐 Website: **[scribe-mail.com](https://scribe-mail.com)**
+- ✍️ [Email signature management for teams](https://scribe-mail.com) — built for teams & AI agents
+- 📈 [Conversion tracking & attribution](https://scribe-mail.com) — from click to revenue
+- 🔌 Composable, with a built-in [API and MCP tools](https://scribe-mail.com)
+
+[Start a free 14-day trial →](https://scribe-mail.com) — no card required, all features, unlimited users.
 
 ## License
 
