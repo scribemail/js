@@ -1,8 +1,7 @@
 name: Release
 
 # Fires only on semver version tags, e.g. v1.0.0 / v1.2.3.
-# Cut a release with:  npm version <major|minor|patch>  (bumps package.json + creates the tag)
-#                      git push --follow-tags
+# Cut a release with `pnpm release` (prompts for the bump, then bumps + tags + pushes).
 on:
   push:
     tags:

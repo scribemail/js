@@ -4,13 +4,13 @@
   "description": "Scribe event tracking SDK — track conversions and attribute them to email-signature clicks.",
   "license": "MIT",
   "author": "Scribe SAS",
-  "homepage": "https://github.com/scribe-sas/tracking-sdk#readme",
+  "homepage": "https://github.com/scribemail/js#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/scribe-sas/tracking-sdk.git"
+    "url": "git+https://github.com/scribemail/js.git"
   },
   "bugs": {
-    "url": "https://github.com/scribe-sas/tracking-sdk/issues"
+    "url": "https://github.com/scribemail/js/issues"
   },
   "keywords": [
     "analytics",
@@ -45,6 +45,7 @@
     "build": "node esbuild.config.mjs && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "release": "node scripts/release.mjs",
     "prepublishOnly": "pnpm build && pnpm test"
   },
   "devDependencies": {

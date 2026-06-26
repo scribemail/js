@@ -111,14 +111,16 @@ pnpm build       # → dist/v1/tracking.js (IIFE) + dist/index.{mjs,cjs} + dist/
 ## Releasing
 
 Releases are automated by [`.github/workflows/release.yml`](.github/workflows/release.yml), which
-fires on a pushed version tag (`vX.Y.Z`). To cut a release:
+fires on a pushed version tag (`vX.Y.Z`). To cut a release, run:
 
 ```bash
-npm version patch   # or minor / major — bumps package.json and creates the matching git tag
-git push --follow-tags
+pnpm release
 ```
 
-The workflow then verifies the tag matches `package.json`, runs typecheck + tests + build, and:
+It prompts for the bump (patch / minor / major / custom), verifies locally (typecheck + test +
+build), then bumps `package.json`, commits, tags `vX.Y.Z`, and pushes — which kicks off the
+workflow. The workflow re-verifies the tag matches `package.json`, runs typecheck + tests + build,
+and:
 
 1. **npm** — publishes `@scribe-sas/js` (public, with build provenance).
 2. **CDN** — uploads `dist/v1/tracking.js` (+ sourcemap) to the Cloudflare R2 bucket behind
