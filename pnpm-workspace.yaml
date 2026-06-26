@@ -1,4 +1,4 @@
-# pnpm reads build-script approval from here (no longer from package.json's "pnpm" field).
-# esbuild ships a native binary via a postinstall script, so it must be allowed to build.
-onlyBuiltDependencies:
-  - esbuild
+# Approve dependency build scripts (pnpm >= 10.26; this is what `pnpm approve-builds` writes).
+# esbuild compiles a native platform binary in its postinstall, so it must be allowed to build.
+allowBuilds:
+  esbuild: true
