@@ -1,0 +1,56 @@
+{
+  "name": "@scribe-sas/js",
+  "version": "0.2.0",
+  "description": "Scribe event tracking SDK — track conversions and attribute them to email-signature clicks.",
+  "license": "MIT",
+  "author": "Scribe SAS",
+  "homepage": "https://github.com/scribe-sas/tracking-sdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scribe-sas/tracking-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/scribe-sas/tracking-sdk/issues"
+  },
+  "keywords": [
+    "analytics",
+    "event-tracking",
+    "attribution",
+    "conversion-tracking",
+    "email-signature",
+    "scribe"
+  ],
+  "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./tracking.js": "./dist/v1/tracking.js"
+  },
+  "files": ["dist"],
+  "sideEffects": ["./dist/v1/tracking.js"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node esbuild.config.mjs && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm build && pnpm test"
+  },
+  "devDependencies": {
+    "esbuild": "^0.23.0",
+    "jsdom": "^24.1.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}

@@ -1,0 +1,108 @@
+name: Release
+
+# Fires only on semver version tags, e.g. v1.0.0 / v1.2.3.
+# Cut a release with:  npm version <major|minor|patch>  (bumps package.json + creates the tag)
+#                      git push --follow-tags
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+# --- Adjust these to your Cloudflare setup -------------------------------------------------------
+# R2_BUCKET : the R2 bucket name that backs cdn-1.scribe-mail.com
+# CDN_BASE  : the public custom-domain base the bucket is served from (no trailing slash)
+env:
+  R2_BUCKET: scribe-tracking-cdn
+  CDN_BASE: https://cdn-1.scribe-mail.com
+# -------------------------------------------------------------------------------------------------
+
+permissions:
+  contents: write # create the GitHub Release
+  id-token: write # npm provenance (OIDC)
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      # The tag is the source of truth's mirror — it must match package.json exactly, so a mistagged
+      # release fails here before anything is published.
+      - name: Verify tag matches package.json version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          echo "tag=$TAG_VERSION package.json=$PKG_VERSION"
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Tag v$TAG_VERSION does not match package.json version $PKG_VERSION. Bump package.json and retag."
+            exit 1
+          fi
+          echo "VERSION=$TAG_VERSION" >> "$GITHUB_ENV"
+          echo "MAJOR=${TAG_VERSION%%.*}" >> "$GITHUB_ENV"
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      # 1) npm — public package with build provenance.
+      - name: Publish to npm
+        run: pnpm publish --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # 2) Cloudflare R2 — upload the IIFE + sourcemap to the major-versioned path the snippet URL
+      #    uses (v1/tracking.js). Minor/patch releases overwrite within the same major; a breaking
+      #    change ships under v2/* (bump the major tag). --remote targets the real bucket.
+      - name: Upload to R2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          pnpm dlx wrangler@4 r2 object put "$R2_BUCKET/v$MAJOR/tracking.js" \
+            --file=dist/v1/tracking.js \
+            --content-type="application/javascript; charset=utf-8" \
+            --cache-control="public, max-age=600, must-revalidate" \
+            --remote
+          pnpm dlx wrangler@4 r2 object put "$R2_BUCKET/v$MAJOR/tracking.js.map" \
+            --file=dist/v1/tracking.js.map \
+            --content-type="application/json; charset=utf-8" \
+            --cache-control="public, max-age=600, must-revalidate" \
+            --remote
+
+      # 3) Purge the edge cache for the two URLs so the new build propagates immediately.
+      - name: Purge Cloudflare cache
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: |
+          curl -fsS -X POST \
+            "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "{\"files\":[\"$CDN_BASE/v$MAJOR/tracking.js\",\"$CDN_BASE/v$MAJOR/tracking.js.map\"]}"
+
+      # 4) GitHub Release with the built IIFE attached + auto-generated notes.
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/v1/tracking.js
+          generate_release_notes: true
