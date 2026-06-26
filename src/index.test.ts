@@ -27,7 +27,7 @@ describe("npm module — init / track", () => {
     history.replaceState({}, "", "/landing?scribe_click_id=click-abc");
 
     const { init } = await import("./index");
-    const scribe = init({ site: "ws-uuid-1" });
+    const scribe = init({ id: "ws-uuid-1" });
     scribe.track("signup", { value: 12.5, currency: "EUR", plan: "team" });
     scribe.flush();
 
@@ -52,7 +52,7 @@ describe("npm module — init / track", () => {
     history.replaceState({}, "", "/landing");
 
     const { init } = await import("./index");
-    init({ site: "ws-2", endpoint: "https://track.example.com" });
+    init({ id: "ws-2", endpoint: "https://track.example.com" });
     // @ts-expect-error global set by init
     window.scribe.track("page_view");
     // @ts-expect-error global set by init
@@ -81,7 +81,7 @@ describe("npm module — init / track", () => {
     history.replaceState({}, "", "/landing");
 
     const { init } = await import("./index");
-    const scribe = init({ site: "ws-id" });
+    const scribe = init({ id: "ws-id" });
     scribe.identify("user_42", { email: "a@b.com" });
     scribe.track("signup");
     scribe.flush();

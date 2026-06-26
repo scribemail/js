@@ -1,7 +1,7 @@
 // npm entry point for @scribemail/js — the programmatic API for bundler/app code:
 //
 //   import scribe from '@scribemail/js';
-//   scribe.init({ site: 'YOUR_EVENT_TRACKING_ID' });
+//   scribe.init({ id: 'YOUR_EVENT_TRACKING_ID' });
 //   scribe.track('signup', { value: 99, currency: 'USD' });
 //
 // (Named `init`/`track`/`flush` exports work too — same singleton.) Importing this module has no
@@ -14,8 +14,11 @@ export { buildEvent, uuid } from "./core";
 export type { Metadata, ScribeEvent, Tracker, TrackerConfig, Traits } from "./core";
 
 export interface InitOptions {
-  /** Your Event Tracking ID (the workspace's event_tracking_uuid), from your Scribe dashboard. */
-  site: string;
+  /**
+   * Your Event Tracking ID (the workspace's event_tracking_uuid). Find it in your Scribe
+   * workspace settings: https://app.scribe-mail.com/home?globalModal=settings
+   */
+  id: string;
   /** Override the ingest host (advanced/testing). */
   endpoint?: string;
   /** Defaults to true. Set false to disable first-party storage of the visitor identity. */
@@ -42,7 +45,7 @@ let tracker: Tracker | undefined;
 
 export function init(options: InitOptions): Scribe {
   tracker = createTracker({
-    site: options.site,
+    site: options.id,
     endpoint: options.endpoint,
     consentDenied: options.consent === false,
     clickId: options.clickId,
@@ -56,7 +59,7 @@ export function init(options: InitOptions): Scribe {
 
 export function track(name: string, metadata?: Metadata): void {
   if (!tracker) {
-    if (typeof console !== "undefined") console.warn("[scribe] call init({ site }) before track()");
+    if (typeof console !== "undefined") console.warn("[scribe] call init({ id }) before track()");
     return;
   }
   tracker.track(name, metadata);
@@ -64,7 +67,7 @@ export function track(name: string, metadata?: Metadata): void {
 
 export function identify(userId?: string, traits?: Traits): void {
   if (!tracker) {
-    if (typeof console !== "undefined") console.warn("[scribe] call init({ site }) before identify()");
+    if (typeof console !== "undefined") console.warn("[scribe] call init({ id }) before identify()");
     return;
   }
   tracker.identify(userId, traits);
@@ -72,7 +75,7 @@ export function identify(userId?: string, traits?: Traits): void {
 
 export function reset(): void {
   if (!tracker) {
-    if (typeof console !== "undefined") console.warn("[scribe] call init({ site }) before reset()");
+    if (typeof console !== "undefined") console.warn("[scribe] call init({ id }) before reset()");
     return;
   }
   tracker.reset();

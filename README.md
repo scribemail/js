@@ -17,9 +17,13 @@ npm install @scribemail/js
 ```js
 import scribe from '@scribemail/js';
 
-scribe.init({ site: 'YOUR_EVENT_TRACKING_ID' }); // once, at app startup
+scribe.init({ id: 'YOUR_EVENT_TRACKING_ID' }); // once, at app startup
 scribe.track('signup', { value: 99.0, currency: 'USD' });
 ```
+
+> **Where do I find `YOUR_EVENT_TRACKING_ID`?** It's your workspace's **Event Tracking ID** — a
+> public (non-secret) id. Copy it from your Scribe workspace settings:
+> [app.scribe-mail.com → Settings](https://app.scribe-mail.com/home?globalModal=settings).
 
 Named imports work too (`import { init, track, identify } from '@scribemail/js'`). Ships ESM + CJS +
 TypeScript types, and is SSR-safe — importing has no side effects, and nothing is sent until you
@@ -36,8 +40,8 @@ call `init()`.
 </script>
 ```
 
-- `data-workspace` — your **Event Tracking ID**, a public (non-secret) site id from your
-  [Scribe dashboard](https://scribe-mail.com).
+- `data-workspace` — your **Event Tracking ID**, a public (non-secret) site id. Copy it from your
+  [Scribe workspace settings](https://app.scribe-mail.com/home?globalModal=settings).
 - `data-consent="denied"` — start with tracking storage disabled (see [Consent & privacy](#consent--privacy)).
 - `data-cookie-domain="example.com"` — set the identity cookie's domain explicitly (see
   [Cross-subdomain identity](#cross-subdomain-identity)). Optional; defaults to your top domain.
@@ -47,7 +51,7 @@ The snippet auto-initializes and exposes a global `scribe`.
 ## API
 
 ```js
-scribe.init({ site, consent?, cookieDomain? }); // npm only; the snippet auto-inits from data-* attributes
+scribe.init({ id, consent?, cookieDomain? }); // npm only; the snippet auto-inits from data-* attributes
 scribe.track(name, metadata?);     // record an event
 scribe.identify(userId?, traits?); // associate this visitor's events with one of your users
 scribe.reset();                    // clear the identity (call on logout)
@@ -96,7 +100,7 @@ Override the domain when the default isn't what you want:
 
 ```js
 // npm
-scribe.init({ site: 'YOUR_EVENT_TRACKING_ID', cookieDomain: 'example.com' });
+scribe.init({ id: 'YOUR_EVENT_TRACKING_ID', cookieDomain: 'example.com' });
 ```
 
 ```html
