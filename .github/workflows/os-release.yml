@@ -1,0 +1,96 @@
+# Releases this lib from Scribe OS (orchestrator step 33). The Releases page dispatches this workflow
+# with the bump Gil picked and the version it showed. It does what `pnpm release` does on the laptop:
+# check, bump package.json, commit, tag v<version>, push the branch, then the tag. It pushes as
+# scribe-deploy-bot: an App's tag push starts the tag's own workflow (release.yml or publish.yml), which
+# publishes to npm as before. GITHUB_TOKEN's wouldn't. `pnpm release` stays for the laptop.
+#
+# Needs: scribe-deploy-bot installed on this repo, and a bypass actor on `main` and on `release tags`.
+# Secrets: DEPLOY_BOT_PRIVATE_KEY. Variable: DEPLOY_BOT_APP_ID. Both org-level.
+name: OS release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: patch, minor or major
+        required: true
+        type: choice
+        options: [patch, minor, major]
+      from:
+        description: the version the Releases page showed; another one on main stops the release
+        required: true
+        type: string
+
+concurrency:
+  group: os-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read # the push uses a scribe-deploy-bot token, not GITHUB_TOKEN
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: From main only
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Dispatch it on main, not $GITHUB_REF."
+          exit 1
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          # Don't persist GITHUB_TOKEN: it would override the bot's token in the push URL.
+          persist-credentials: false
+
+      - name: The version the page showed
+        env:
+          FROM: ${{ inputs.from }}
+        run: |
+          PKG="$(node -p "require('./package.json').version")"
+          if [ "$PKG" != "$FROM" ]; then
+            echo "::error::package.json is $PKG on main, the Releases page showed $FROM: refresh it."
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@v4 # version from packageManager in package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      # What scripts/release.mjs verifies before tagging.
+      - name: Verify before tagging
+        run: pnpm install --frozen-lockfile && pnpm typecheck && pnpm test && pnpm build
+
+      - name: Bump and tag
+        id: bump
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          git config user.name "scribe-deploy-bot[bot]"
+          git config user.email "309727444+scribe-deploy-bot[bot]@users.noreply.github.com"
+          pnpm version "$BUMP" --message "release: v%s"
+          echo "tag=v$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Mint scribe-deploy-bot token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.DEPLOY_BOT_APP_ID }}
+          private-key: ${{ secrets.DEPLOY_BOT_PRIVATE_KEY }}
+
+      # The branch first, then the tag as its own push: a combined push can leave GitHub registering only
+      # the branch event, and the tag's workflow never starts (types' release.mjs).
+      - name: Push the branch, then the tag
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ steps.bump.outputs.tag }}
+        run: |
+          remote="https://x-access-token:${APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push "$remote" HEAD:main
+          git push "$remote" "refs/tags/${TAG}"
+          echo "Pushed ${TAG}: the tag's workflow publishes it." >> "$GITHUB_STEP_SUMMARY"
