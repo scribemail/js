@@ -2,3 +2,8 @@
 # esbuild compiles a native platform binary in its postinstall, so it must be allowed to build.
 allowBuilds:
   esbuild: true
+
+# Security fixes Dependabot cannot make itself (security_update_not_possible): the parent pins the
+# vulnerable version. Drop an entry once the parent requires the fixed one.
+overrides:
+  source-map-js: ^1.2.2
